@@ -1,0 +1,6 @@
+#RAG
+langchain
+langchain_openai
+
+#Backend
+Fastapi
