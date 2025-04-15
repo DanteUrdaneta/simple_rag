@@ -1,6 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 from unstructured.partition.pdf import partition_pdf
+from unstructured.chunking.basic import chunk_elements
 
 import os
 
@@ -16,6 +17,11 @@ def load_documents(pdf):
     infer_table_structure=True,
     include_page_breaks=False)
   return elements
+
+def split_document_into_chuncks(document):
+  elements = load_documents(document)
+  chunks = chunk_elements(elements)
+  return chunks
 
 class Rag():
   pass

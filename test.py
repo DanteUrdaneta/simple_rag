@@ -1,12 +1,11 @@
-from modules.rag.simple_rag import load_documents
+from modules.rag.simple_rag import split_document_into_chuncks
 
 
 if __name__ == "__main__":
-  elements = load_documents('ai.pdf')
-  complete_text = ''
-  for element in elements:
-    complete_text += element.text
-  print(complete_text)  
+  chunks = split_document_into_chuncks('ai.pdf')
+  for chunk in chunks:
+    print(chunk)
+    print("\n\n" + "-"*80)
 
 
 
