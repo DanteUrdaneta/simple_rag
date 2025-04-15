@@ -1,6 +1,13 @@
 #RAG
-langchain
-langchain_openai
+sentence-transformers
+lancedb
+openai
 
 #Backend
 Fastapi
+
+
+#utils
+dotenv
+pandas
+unstructured["pdf"]
