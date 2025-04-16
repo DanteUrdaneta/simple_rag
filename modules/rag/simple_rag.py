@@ -19,7 +19,7 @@ llm = OpenAI(base_url='https://api.deepseek.com', api_key=deepseek_api_key)
 
 func = get_registry().get("sentence-transformers").create(name="all-MiniLM-L6-v2", device="cpu")
 
-class Words(LanceModel):
+class Schema(LanceModel):
       id: int
       text: str = func.SourceField()
       vector: func.VectorField()
@@ -27,54 +27,71 @@ class Words(LanceModel):
       class Config:
           arbitrary_types_allowed = True
 
-def embeddings(chunks):
+class retrieval:
+  def __init__(self):
+     pass
+   
+  def embeddings(self, chunks):
 
-    # convert the chunks into text strings
-    chunks_text = [chunk.text for chunk in chunks if hasattr(chunk, "text")]
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    embs = model.encode(chunks_text, convert_to_numpy=True)
-    embedding_dim = embs.shape[1]
-    
-    # insert to the vector store
-    db = lancedb.connect('vector_store/db')
-    table_name = 'documment_chunks'
-    
-    docs = []
-    
-    # check if the connection exits
-    
-    for i, (text, emb) in enumerate(zip(chunks_text, embs)):
-        docs.append({
-            "id": i,
-            "text": text,
-            "vector": emb.tolist()  # Convert to numpy
-        })
-    
-    #insert to the database
-    
-    
-    try:
-      collection = db.create_table(table_name, docs)
-    except Exception as e:
-      print(e)
-      collection = db.open_table(table_name)
+      # convert the chunks into text strings
+      chunks_text = [chunk.text for chunk in chunks if hasattr(chunk, "text")]
+      model = SentenceTransformer("all-MiniLM-L6-v2")
+      embs = model.encode(chunks_text, convert_to_numpy=True)
+      embedding_dim = embs.shape[1]
       
-    print(f"Inserted {len(docs)} documents in the collection '{table_name}'.")
+      # insert to the vector store
+      db = lancedb.connect('vector_store/db')
+      table_name = 'documment_chunks'
+      
+      docs = []
+      
+      # check if the connection exits
+      
+      for i, (text, emb) in enumerate(zip(chunks_text, embs)):
+          docs.append({
+              "id": i,
+              "text": text,
+              "vector": emb.tolist()  # Convert to numpy
+          })
+      
+      #insert to the database
+      
+      
+      try:
+        collection = db.create_table(table_name, docs)
+      except Exception as e:
+        print(e)
+        collection = db.open_table(table_name)
+        collection.add(data=docs)
+        
+      return(f"Inserted {len(docs)} documents in the collection '{table_name}'.")
 
 
-def load_documents(pdf):
-  elements = partition_pdf(
-    pdf,
-    strategy="auto",
-    infer_table_structure=True,
-    include_page_breaks=False)
-  return elements
+  def load_documents(self, pdf):
+    elements = partition_pdf(
+      pdf,
+      strategy="auto",
+      infer_table_structure=True,
+      include_page_breaks=False)
+    return elements
 
-def split_document_into_chuncks(document):
-  elements = load_documents(document)
-  chunks = chunk_elements(elements)
-  return chunks
+  def split_document_into_chuncks(self, document):
+    chunks = chunk_elements(document)
+    return chunks
 
+  def process_document(self, pdf):
+    
+    #process the document with unstructured
+    document = self.load_documents(pdf)
+    
+    #split the document into chunks
+    chunks = self.split_document_into_chuncks(document)
+    
+    # embeds the chunks and insert them to vector store
+    embs = self.embeddings(chunks)
+    return 'the document was inserted into the vector store' + embs
+    
+    
 
 class Rag:
     def __init__(self):
@@ -87,7 +104,7 @@ class Rag:
         db = lancedb.connect('vector_store/db')
         collection = db.open_table('documment_chunks')
         
-        docs = collection.search(emb_query).limit(3).to_pydantic(Words)
+        docs = collection.search(emb_query).limit(3).to_pydantic(Schema)
         
         context = ''
         i = 1

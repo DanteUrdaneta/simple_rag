@@ -10,4 +10,5 @@ Fastapi
 #utils
 dotenv
 pandas
-unstructured["pdf"]
+unstructured[pdf]
+fastapi[standard]
