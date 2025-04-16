@@ -1,11 +1,10 @@
-from modules.rag.simple_rag import split_document_into_chuncks
+from modules.rag.simple_rag import Rag
 
 
 if __name__ == "__main__":
-  chunks = split_document_into_chuncks('ai.pdf')
-  for chunk in chunks:
-    print(chunk)
-    print("\n\n" + "-"*80)
+  rag_instance = Rag()
+  anwser = rag_instance.get_answer('cual es el nombre del autor del documento?')
+  print(anwser)
 
 
 
