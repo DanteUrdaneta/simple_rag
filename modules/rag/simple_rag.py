@@ -8,14 +8,21 @@ from lancedb.embeddings import get_registry
 import lancedb
 from lancedb.pydantic import LanceModel
 from pydantic import BaseModel
+from langfuse import Langfuse
 
 import os
 
 load_dotenv()
 
 deepseek_api_key = os.getenv('DEEPSEEK_KEY')
+
 llm = OpenAI(base_url='https://api.deepseek.com', api_key=deepseek_api_key)
 
+langfuse = Langfuse(
+  secret_key=os.getenv('LANGFUSE_SECRET_KEY'),
+  public_key=os.getenv('LANGFUSE_PUBLIC_KEY'),
+  host=os.getenv('LANGFUSE_HOST')
+)
 
 func = get_registry().get("sentence-transformers").create(name="all-MiniLM-L6-v2", device="cpu")
 
@@ -115,6 +122,10 @@ class Rag:
         return context
 
     def get_answer(self, question):
+        trace = langfuse.trace(name=f'chain execution => {question}', input={'user': question})
+        generation = trace.generation(name = 'llm_generation', input = {'user': question})
+      
+      
         context = self.get_context(question)
         
         answer = llm.chat.completions.create(
@@ -124,4 +135,13 @@ class Rag:
                 {"role": "user", "content": f"Here is the question from the user: {question}"}
             ]
         )
-        return answer.choices[0].message.content
+        
+        response = answer.choices[0].message.content
+        
+        generation.end(
+          output = response,
+          metadata = {'context': context}
+        )
+        
+        
+        return response
